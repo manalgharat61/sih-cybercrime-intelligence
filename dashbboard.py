@@ -1,75 +1,54 @@
 import streamlit as st
+import pandas as pd
+import numpy as np
+import joblib
 import folium
 from streamlit_folium import st_folium
-import requests
-import pandas as pd
 
-# Load ATM Data for mapping base locations
+st.set_page_config(page_title="Cybercrime Predictive Intelligence", layout="wide")
+
+# Load model, encoder, and data directly
+@st.cache_resource
+def load_assets():
+    model = joblib.load('hotspot_model.pkl')
+    encoder = joblib.load('fraud_encoder.pkl')
+    atm_df = pd.read_csv('atm_locations.csv')
+    return model, encoder, atm_df
+
 try:
-    atms = pd.read_csv("atm_locations.csv")
-except FileNotFoundError:
-    st.error("Missing atm_locations.csv file. Run generate_data.py first.")
-    st.stop()
+    model, encoder, atm_df = load_assets()
+except Exception as e:
+    st.error(f"Error loading model assets: {e}")
 
-st.title("🚨 Cybercrime Predictive Intelligence")
+st.markdown("🚨 **Cybercrime Predictive Intelligence**")
 st.markdown("Forecast Likely Cash Withdrawal Locations in Advance")
 
 st.sidebar.header("Log New Cyber Complaint")
+amount_lost = st.sidebar.number_input("Amount Lost (INR)", min_value=1000, value=25000, step=1000)
 
-# Form inputs for the dashboard user
-amount = st.sidebar.number_input("Amount Lost (INR)", min_value=1000, value=25000, step=1000)
-fraud_type = st.sidebar.selectbox("Fraud Type", [
-    'UPI Phishing', 
-    'Investment Scam', 
-    'Credit Card Fraud', 
-    'Part-time Job Scam', 
-    'Loan App Extortion'
-])
+fraud_types = list(encoder.classes_) if hasattr(encoder, 'classes_') else ["UPI Phishing", "Credit Card Fraud", "Identity Theft"]
+fraud_type = st.sidebar.selectbox("Fraud Type", fraud_types)
 
-# 1. Initialize session state memory
-if "prediction_data" not in st.session_state:
-    st.session_state.prediction_data = None
-
-# 2. Fetch data on button click and save it to memory
 if st.sidebar.button("Generate Hotspot Prediction"):
     try:
-        response = requests.post(
-            "http://127.0.0.1:8000/predict_hotspot",
-            json={"amount_lost": amount, "fraud_type": fraud_type}
-        )
-        response.raise_for_status()
+        encoded_fraud = encoder.transform([fraud_type])[0]
+    except:
+        encoded_fraud = 0
         
-        # Save the API response to Streamlit's memory
-        st.session_state.prediction_data = response.json()
-        
-    except requests.exceptions.ConnectionError:
-        st.error("Could not connect to API. Ensure your FastAPI server is running on port 8000.")
-
-# 3. Render the map permanently if there is data in memory
-if st.session_state.prediction_data:
-    data = st.session_state.prediction_data
-    target_zone = data["prediction"]["high_risk_zone"]
-    confidence = data["prediction"]["confidence_score"]
+    # Predict probabilities or target zone
+    input_data = pd.DataFrame([[amount_lost, encoded_fraud]], columns=['amount_lost', 'fraud_type'])
+    prediction = model.predict(input_data)[0]
     
-    st.success(data["actionable_intel"])
+    st.success(f"⚠️ Predicted High-Risk Cashout Zone: **{prediction}**")
     
-    # Filter ATMs located in the predicted high-risk zone
-    risk_atms = atms[atms['city_zone'] == target_zone]
-    
-    # Render the map centered on our base coordinates
-    m = folium.Map(location=[19.0760, 72.8777], zoom_start=11)
-    
-    # Plot the predicted high-probability withdrawal nodes
-    for _, row in risk_atms.iterrows():
-        folium.CircleMarker(
-            location=[row['latitude'], row['longitude']],
-            radius=8,
-            color="red",
-            fill=True,
-            fill_color="red",
-            fill_opacity=0.7,
-            popup=f"{row['bank_name']} - {row['atm_id']} (Risk: {confidence})"
-        ).add_to(m)
-        
-    # Display the interactive Folium map inside Streamlit
-    st_data = st_folium(m, width=700, height=500)
+    # Render map
+    st.subheader("Predicted Hotspot Location Map")
+    m = folium.Map(location=[19.0760, 72.8777], zoom_start=12)
+    folium.Marker(
+        [19.0760, 72.8777],
+        popup=f"High Risk Zone: {prediction}\nLoss: INR {amount_lost}",
+        icon=folium.Icon(color="red", icon="warning")
+    ).add_to(m)
+    st_folium(m, width=700, height=450)
+else:
+    st.info("Configure complaint details in the sidebar and click **Generate Hotspot Prediction**.")
