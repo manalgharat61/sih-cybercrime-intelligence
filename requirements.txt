@@ -6,3 +6,4 @@ folium
 fastapi
 uvicorn
 requests
+streamlit-folium
