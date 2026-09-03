@@ -35,8 +35,16 @@ if st.sidebar.button("Generate Hotspot Prediction"):
     except:
         encoded_fraud = 0
         
-    # Predict probabilities or target zone
+    # Build input dataframe
     input_data = pd.DataFrame([[amount_lost, encoded_fraud]], columns=['amount_lost', 'fraud_type'])
+    
+    # Automatically align features to whatever the saved model expects
+    if hasattr(model, "feature_names_in_"):
+        for col in model.feature_names_in_:
+            if col not in input_data.columns:
+                input_data[col] = 0
+        input_data = input_data[model.feature_names_in_]
+
     prediction = model.predict(input_data)[0]
     
     st.success(f"⚠️ Predicted High-Risk Cashout Zone: **{prediction}**")
