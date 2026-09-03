@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CyberShield — Cybercrime Predictive Intelligence</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    :root {
+      --bg-primary: #050c1a;
+      --bg-card: #0a1628;
+      --bg-card2: #0d1f3c;
+      --accent-blue: #00d4ff;
+      --accent-cyan: #00ffcc;
+      --accent-red: #ff3355;
+      --accent-yellow: #ffcc00;
+      --accent-purple: #b66dff;
+      --accent-green: #00ff88;
+      --border: rgba(0,212,255,0.18);
+      --text-main: #e0f0ff;
+      --text-muted: #6a8bad;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg-primary);
+      color: var(--text-main);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .main-wrapper { position: relative; z-index: 1; }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #060e1f 0%, #0a1628 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, #00d4ff, #0066ff);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 0 18px rgba(0,212,255,0.5);
+    }
+    .logo-text { font-size: 1.35rem; font-weight: 700; letter-spacing: 0.04em; }
+    .logo-text span { color: var(--accent-blue); }
+    .logo-sub { font-size: 0.68rem; color: var(--text-muted); letter-spacing: 0.12em; text-transform: uppercase; }
+    .live-badge {
+      display: flex; align-items: center; gap: 7px;
+      background: rgba(0,255,136,0.1);
+      border: 1px solid rgba(0,255,136,0.3);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 0.75rem;
+      color: var(--accent-green);
+      font-weight: 600;
+    }
+    .live-dot {
+      width: 8px; height: 8px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      animation: pulse-green 1.5s infinite;
+    }
+    @keyframes pulse-green {
+      0%,100% { box-shadow: 0 0 0 0 rgba(0,255,136,0.6); }
+      50% { box-shadow: 0 0 0 6px rgba(0,255,136,0); }
+    }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-time { font-size: 0.78rem; color: var(--text-muted); text-align: right; }
+    .header-time strong { display: block; color: var(--text-main); font-size: 0.88rem; }
+
+    /* ── SIDEBAR NAV ── */
+    .layout { display: flex; min-height: calc(100vh - 68px); }
+    nav.sidebar {
+      width: 220px;
+      min-width: 220px;
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .nav-section-label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-muted);
+      padding: 0.6rem 1.4rem 0.3rem;
+      margin-top: 0.5rem;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 1.4rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    .nav-item:hover { color: var(--text-main); background: rgba(0,212,255,0.06); }
+    .nav-item.active {
+      color: var(--accent-blue);
+      background: rgba(0,212,255,0.1);
+      border-left-color: var(--accent-blue);
+    }
+    .nav-item i { width: 18px; text-align: center; font-size: 0.9rem; }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--accent-red);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 10px;
+    }
+
+    /* ── MAIN CONTENT ── */
+    main { flex: 1; padding: 1.8rem 2rem; overflow-y: auto; }
+
+    /* ── PAGE SECTIONS ── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.3rem;
+    }
+    .section-sub { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.6rem; }
+
+    /* ── KPI CARDS ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.6rem;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.2rem 1.4rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,212,255,0.12); }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--kpi-color, var(--accent-blue));
+    }
+    .kpi-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .kpi-value { font-size: 2rem; font-weight: 800; color: var(--text-main); line-height: 1; }
+    .kpi-value span { font-size: 1rem; color: var(--text-muted); font-weight: 400; }
+    .kpi-change {
+      font-size: 0.74rem;
+      margin-top: 0.4rem;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .kpi-change.up { color: var(--accent-red); }
+    .kpi-change.down { color: var(--accent-green); }
+    .kpi-icon {
+      position: absolute; right: 1.2rem; top: 1.2rem;
+      font-size: 1.6rem;
+      opacity: 0.15;
+    }
+
+    /* ── CHART CARD ── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.4rem;
+      position: relative;
+    }
+    .card-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 0.3rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title i { color: var(--accent-blue); font-size: 0.85rem; }
+    .card-sub { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 1rem; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .grid-65-35 { display: grid; grid-template-columns: 1.8fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+
+    /* ── MAP ── */
+    #hotspot-map, #atm-map { height: 380px; border-radius: 10px; z-index: 1; }
+
+    /* ── TABLE ── */
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .data-table thead th {
+      text-align: left;
+      padding: 10px 12px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table tbody tr {
+      border-bottom: 1px solid rgba(0,212,255,0.06);
+      transition: background 0.15s;
+    }
+    .data-table tbody tr:hover { background: rgba(0,212,255,0.05); }
+    .data-table tbody td { padding: 9px 12px; color: var(--text-main); }
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.68rem;
+      font-weight: 600;
+    }
+    .badge-red { background: rgba(255,51,85,0.15); color: var(--accent-red); border: 1px solid rgba(255,51,85,0.3); }
+    .badge-yellow { background: rgba(255,204,0,0.15); color: var(--accent-yellow); border: 1px solid rgba(255,204,0,0.3); }
+    .badge-green { background: rgba(0,255,136,0.1); color: var(--accent-green); border: 1px solid rgba(0,255,136,0.3); }
+    .badge-blue { background: rgba(0,212,255,0.12); color: var(--accent-blue); border: 1px solid rgba(0,212,255,0.3); }
+    .badge-purple { background: rgba(182,109,255,0.12); color: var(--accent-purple); border: 1px solid rgba(182,109,255,0.3); }
+
+    /* ── PREDICTION PANEL ── */
+    .predict-form {
+      display: grid;
+      gap: 1rem;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      background: rgba(0,212,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus { border-color: var(--accent-blue); }
+    .form-group select option { background: #0a1628; }
+
+    .btn-predict {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #0066ff, #00d4ff);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(0,150,255,0.4);
+    }
+    .btn-predict:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,150,255,0.55); }
+    .btn-predict:active { transform: translateY(0); }
+
+    .prediction-result {
+      margin-top: 1rem;
+      padding: 1.2rem;
+      background: rgba(0,212,255,0.07);
+      border: 1px solid rgba(0,212,255,0.25);
+      border-radius: 10px;
+      display: none;
+    }
+    .prediction-result.show { display: block; animation: fadeSlide 0.4s ease; }
+    @keyframes fadeSlide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .pred-zone-name {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--accent-cyan);
+      margin: 0.3rem 0;
+    }
+    .confidence-bar {
+      height: 8px;
+      background: rgba(0,212,255,0.15);
+      border-radius: 4px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    .confidence-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0066ff, #00d4ff);
+      border-radius: 4px;
+      transition: width 0.8s ease;
+    }
+
+    /* ── ALERT TICKER ── */
+    .alert-ticker {
+      background: rgba(255,51,85,0.08);
+      border: 1px solid rgba(255,51,85,0.25);
+      border-radius: 10px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow: hidden;
+      margin-bottom: 1.2rem;
+    }
+    .ticker-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-red);
+      white-space: nowrap;
+      background: rgba(255,51,85,0.15);
+      padding: 3px 10px;
+      border-radius: 4px;
+    }
+    .ticker-content {
+      font-size: 0.8rem;
+      color: #ffaaaa;
+      animation: ticker 20s linear infinite;
+      white-space: nowrap;
+    }
+    @keyframes ticker {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+
+    /* ── RISK METER ── */
+    .risk-meter {
+      text-align: center;
+      padding: 1rem 0;
+    }
+    .risk-arc {
+      width: 140px; height: 70px;
+      position: relative;
+      margin: 0 auto 0.8rem;
+    }
+    .risk-arc svg { width: 100%; height: 100%; }
+
+    /* ── ZONE CARDS ── */
+    .zone-card {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 0.7rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+    }
+    .zone-card:hover { border-color: rgba(0,212,255,0.35); }
+    .zone-bar-wrap { flex: 1; }
+    .zone-bar-label { display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 5px; }
+    .zone-bar-bg { height: 6px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden; }
+    .zone-bar-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+    .zone-icon { font-size: 1.4rem; width: 36px; text-align: center; }
+
+    /* ── TIMELINE ── */
+    .timeline { padding-left: 0; list-style: none; }
+    .timeline li {
+      position: relative;
+      padding: 0 0 1rem 2rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-left: 2px solid var(--border);
+    }
+    .timeline li:last-child { border-left: 2px solid transparent; }
+    .timeline li::before {
+      content: '';
+      position: absolute;
+      left: -5px; top: 4px;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      box-shadow: 0 0 8px var(--accent-blue);
+    }
+    .timeline li strong { display: block; color: var(--text-main); margin-bottom: 2px; }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.25); border-radius: 3px; }
+
+    /* ── PULSE ANIMATION for map markers ── */
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      display: none;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 500px;
+      max-width: 95vw;
+      animation: fadeSlide 0.3s ease;
+    }
+    .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent-blue); }
+    .close-btn {
+      float: right;
+      background: none; border: none;
+      color: var(--text-muted); cursor: pointer;
+      font-size: 1.2rem;
+      margin-top: -4px;
+    }
+    .close-btn:hover { color: var(--accent-red); }
+
+    /* ── THREAT FEED ── */
+    .threat-item {
+      display: flex; gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(0,212,255,0.07);
+      align-items: flex-start;
+    }
+    .threat-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+    .threat-text { font-size: 0.79rem; color: var(--text-main); line-height: 1.4; }
+    .threat-time { font-size: 0.68rem; color: var(--text-muted); margin-top: 3px; }
+  </style>
+</head>
+<body>
+<div class="main-wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo-area">
+      <div class="logo-icon">🛡️</div>
+      <div>
+        <div class="logo-text">Cyber<span>Shield</span></div>
+        <div class="logo-sub">Predictive Intelligence Platform</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        LIVE MONITORING
+      </div>
+      <div class="header-time">
+        <strong id="clock">--:--:--</strong>
+        <span id="datestamp">Loading...</span>
+      </div>
+      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0044cc,#00aaff);display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;">👮</div>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="nav-section-label">Intelligence</div>
+      <div class="nav-item active" onclick="showPage('dashboard')">
+        <i class="fa fa-chart-pie"></i> Overview
+      </div>
+      <div class="nav-item" onclick="showPage('predict')">
+        <i class="fa fa-crosshairs"></i> Hotspot Predictor
+      </div>
+      <div class="nav-item" onclick="showPage('map')">
+        <i class="fa fa-map-location-dot"></i> ATM Heatmap
+      </div>
+
+      <div class="nav-section-label">Operations</div>
+      <div class="nav-item" onclick="showPage('complaints')">
+        <i class="fa fa-triangle-exclamation"></i> Complaints
+        <span class="nav-badge">47</span>
+      </div>
+      <div class="nav-item" onclick="showPage('mule')">
+        <i class="fa fa-money-bill-transfer"></i> Mule Accounts
+      </div>
+      <div class="nav-item" onclick="showPage('alerts')">
+        <i class="fa fa-bell"></i> Threat Feed
+        <span class="nav-badge">12</span>
+      </div>
+
+      <div class="nav-section-label">Analysis</div>
+      <div class="nav-item" onclick="showPage('analytics')">
+        <i class="fa fa-chart-line"></i> Trend Analysis
+      </div>
+      <div class="nav-item" onclick="showPage('model')">
+        <i class="fa fa-brain"></i> Model Info
+      </div>
+
+      <div style="margin-top:auto;padding:1rem 1.4rem;border-top:1px solid var(--border);margin-top:2rem;">
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:6px;">Model Accuracy</div>
+        <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;">
+          <div style="width:89%;height:100%;background:linear-gradient(90deg,#00ff88,#00d4ff);border-radius:3px;"></div>
+        </div>
+        <div style="font-size:0.78rem;color:var(--accent-green);margin-top:4px;font-weight:700;">89.4% Accuracy</div>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main>
+
+      <!-- ── PAGE: DASHBOARD ── -->
+      <div class="page active" id="page-dashboard">
+        <!-- Alert Ticker -->
+        <div class="alert-ticker">
+          <span class="ticker-label">⚠ ALERT</span>
+          <span class="ticker-content">
+            HIGH RISK: Zone_West ATMs showing elevated withdrawal activity — 3 mule accounts flagged in last 2 hours &nbsp;|&nbsp;
+            NEW: Part-time Job Scam surge in Zone_East — 14 complaints in 24 hrs &nbsp;|&nbsp;
+            ADVISORY: Coordinate with Zone_Central patrol units — Investment Scam pattern detected &nbsp;|&nbsp;
+            ALERT: Mule Account MULE_ACC_5499 linked to 3 complaints — freeze order recommended
+          </span>
+        </div>
+
+        <div class="section-title">Command Center Overview</div>
+        <div class="section-sub">Real-time cybercrime intelligence across all zones · Last updated <span id="last-update">just now</span></div>
+
+        <!-- KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi-card" style="--kpi-color:#ff3355;">
+            <div class="kpi-label">Total Complaints</div>
+            <div class="kpi-value" id="kpi-complaints">1,000</div>
+            <div class="kpi-change up"><i class="fa fa-arrow-up"></i> +47 today</div>
+            <div class="kpi-icon">📋</div>
+          </div>
+          <div class="kpi-card" style="--kpi-color:#ffcc00;">
+            <div class="kpi-label">Total Fraud Loss</div>
+            <div class="kpi-value">₹<span id="kpi-loss">18.7</span><span>Cr</span></div>
+            <div class="kpi-change up"><i class="fa fa-arrow-up"></i> +₹42L today</div>
+            <div class="kpi-icon">💰</div>
+          </div>
+          <div class="kpi-card" style="--kpi-color:#b66dff;">
+            <div class="kpi-label">Mule Accounts</div>
+            <div class="kpi-value" id="kpi-mule">843</div>
+            <div class="kpi-change up"><i class="fa fa-arrow-up"></i> +12 flagged</div>
+            <div class="kpi-icon">🏦</div>
+          </div>
+          <div class="kpi-card" style="--kpi-color:#00ff88;">
+            <div class="kpi-label">Arrests / Actions</div>
+            <div class="kpi-value">34</div>
+            <div class="kpi-change down"><i class="fa fa-arrow-up"></i> +3 this week</div>
+            <div class="kpi-icon">🚔</div>
+          </div>
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="grid-65-35">
+          <div class="card">
+            <div class="card-title"><i class="fa fa-chart-area"></i> Daily Complaint Volume (60 days)</div>
+            <div class="card-sub">Complaint intake trend across all fraud categories</div>
+            <canvas id="trendChart" height="130"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="fa fa-chart-pie"></i> Fraud Type Distribution</div>
+            <div class="card-sub">Breakdown by fraud category</div>
+            <canvas id="fraudPieChart" height="185"></canvas>
+          </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title"><i class="fa fa-map-pin"></i> Cashout Zone Risk Levels</div>
+            <div class="card-sub">Predicted mule activity intensity per zone</div>
+            <div id="zone-bars" style="margin-top:0.5rem;"></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="fa fa-clock"></i> Cashout Time Distribution</div>
+            <div class="card-sub">When mule withdrawals happen (hours of the day)</div>
+            <canvas id="timeChart" height="170"></canvas>
+          </div>
+        </div>
+
+        <!-- Row 3: Recent Complaints & Threat Timeline -->
+        <div class="grid-65-35">
+          <div class="card">
+            <div class="card-title"><i class="fa fa-list"></i> Recent Complaints</div>
+            <div class="card-sub">Latest 8 cybercrime complaints received</div>
+            <div style="overflow-x:auto;">
+              <table class="data-table" id="recent-table"></table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="fa fa-timeline"></i> Incident Timeline</div>
+            <div class="card-sub">Key intelligence events (last 24h)</div>
+            <ul class="timeline" id="timeline-list"></ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PAGE: PREDICT ── -->
+      <div class="page" id="page-predict">
+        <div class="section-title">🎯 ATM Hotspot Predictor</div>
+        <div class="section-sub">Enter complaint details — AI predicts the most likely mule cashout zone and ATM locations</div>
+
+        <div class="grid-65-35">
+          <div>
+            <!-- Prediction Form -->
+            <div class="card" style="margin-bottom:1rem;">
+              <div class="card-title"><i class="fa fa-sliders"></i> Complaint Intelligence Input</div>
+              <div class="card-sub">Fill in complaint attributes to generate hotspot prediction</div>
+              <div class="predict-form">
+                <div class="grid-2" style="margin-bottom:0;">
+                  <div class="form-group">
+                    <label>Fraud Type</label>
+                    <select id="pred-fraud-type">
+                      <option>UPI Phishing</option>
+                      <option>Investment Scam</option>
+                      <option>Credit Card Fraud</option>
+                      <option>Part-time Job Scam</option>
+                      <option>Loan App Extortion</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Amount Lost (INR)</label>
+                    <input type="number" id="pred-amount" value="50000" min="1000" step="5000"/>
+                  </div>
+                </div>
+                <div class="grid-2" style="margin-bottom:0;">
+                  <div class="form-group">
+                    <label>Victim District / Zone</label>
+                    <select id="pred-district">
+                      <option>Zone_North</option>
+                      <option>Zone_South</option>
+                      <option>Zone_East</option>
+                      <option>Zone_West</option>
+                      <option>Zone_Central</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Payment Channel</label>
+                    <select id="pred-channel">
+                      <option>UPI</option>
+                      <option>Net Banking</option>
+                      <option>Debit Card</option>
+                      <option>Credit Card</option>
+                      <option>Wallet</option>
+                    </select>
+                  </div>
+                </div>
+                <button class="btn-predict" onclick="runPrediction()">
+                  <i class="fa fa-bolt"></i> &nbsp; Generate Hotspot Prediction
+                </button>
+              </div>
+
+              <div class="prediction-result" id="pred-result">
+                <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);">⚡ Predicted High-Risk Cashout Zone</div>
+                <div class="pred-zone-name" id="pred-zone-name">—</div>
+                <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px;" id="pred-action-text"></div>
+                <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-muted);margin-bottom:4px;">
+                  <span>Model Confidence</span>
+                  <span id="pred-confidence-label">—</span>
+                </div>
+                <div class="confidence-bar"><div class="confidence-fill" id="pred-conf-bar" style="width:0%"></div></div>
+                <div style="margin-top:1rem;display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.6rem;" id="pred-stats-row"></div>
+              </div>
+            </div>
+
+            <!-- Predicted ATM map -->
+            <div class="card">
+              <div class="card-title"><i class="fa fa-map"></i> Predicted ATM Risk Locations</div>
+              <div class="card-sub">Red markers = high-risk ATMs in predicted cashout zone</div>
+              <div id="hotspot-map"></div>
+            </div>
+          </div>
+
+          <div>
+            <!-- Zone probability breakdown -->
+            <div class="card" style="margin-bottom:1rem;">
+              <div class="card-title"><i class="fa fa-chart-bar"></i> Zone Probability Breakdown</div>
+              <div class="card-sub">Likelihood across all 5 zones</div>
+              <canvas id="zoneProbChart" height="230"></canvas>
+            </div>
+
+            <!-- Intelligence tips -->
+            <div class="card">
+              <div class="card-title"><i class="fa fa-lightbulb"></i> Operational Intel</div>
+              <div id="intel-tips" style="margin-top:0.5rem;">
+                <div style="font-size:0.8rem;color:var(--text-muted);text-align:center;padding:1.5rem 0;">
+                  Run a prediction to see operational recommendations
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PAGE: MAP ── -->
+      <div class="page" id="page-map">
+        <div class="section-title">🗺️ ATM Heatmap & Zone Analysis</div>
+        <div class="section-sub">150 ATM locations across 5 city zones — colour-coded by risk level</div>
+        <div class="grid-65-35">
+          <div class="card">
+            <div class="card-title"><i class="fa fa-location-dot"></i> Live ATM Risk Map — Mumbai Region</div>
+            <div class="card-sub">🔴 High Risk &nbsp;|&nbsp; 🟡 Medium &nbsp;|&nbsp; 🟢 Low Risk</div>
+            <div id="atm-map"></div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:1rem;">
+              <div class="card-title"><i class="fa fa-chart-bar"></i> ATMs per Zone</div>
+              <canvas id="atmZoneChart" height="180"></canvas>
+            </div>
+            <div class="card">
+              <div class="card-title"><i class="fa fa-building-columns"></i> High-Risk ATMs</div>
+              <div class="card-sub">Immediate patrol recommended</div>
+              <div id="high-risk-atm-list" style="max-height:220px;overflow-y:auto;margin-top:0.5rem;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PAGE: COMPLAINTS ── -->
+      <div class="page" id="page-complaints">
+        <div class="section-title">📋 Complaint Registry</div>
+        <div class="section-sub">All 1,000 cybercrime complaints — searchable and filterable</div>
+        <div class="card" style="margin-bottom:1rem;">
+          <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+            <input type="text" id="complaint-search" placeholder="🔍  Search complaint ID, fraud type, mule account..." oninput="filterComplaints()"
+              style="flex:1;min-width:200px;background:rgba(0,212,255,0.06);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--text-main);font-size:0.83rem;outline:none;">
+            <select id="complaint-filter-type" onchange="filterComplaints()"
+              style="background:rgba(0,212,255,0.06);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--text-main);font-size:0.83rem;outline:none;">
+              <option value="">All Fraud Types</option>
+              <option>UPI Phishing</option>
+              <option>Investment Scam</option>
+              <option>Credit Card Fraud</option>
+              <option>Part-time Job Scam</option>
+              <option>Loan App Extortion</option>
+            </select>
+            <select id="complaint-filter-amount" onchange="filterComplaints()"
+              style="background:rgba(0,212,255,0.06);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--text-main);font-size:0.83rem;outline:none;">
+              <option value="">All Amounts</option>
+              <option value="high">₹1L+</option>
+              <option value="mid">₹25K–₹1L</option>
+              <option value="low">Below ₹25K</option>
+            </select>
+            <span id="complaint-count" style="font-size:0.78rem;color:var(--text-muted);white-space:nowrap;"></span>
+          </div>
+        </div>
+        <div class="card">
+          <div style="overflow-x:auto;max-height:500px;overflow-y:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Complaint ID</th>
+                  <th>Date</th>
+                  <th>Fraud Type</th>
+                  <th>Amount Lost</th>
+                  <th>Channel</th>
+                  <th>District</th>
+                  <th>Mule Account</th>
+                  <th>Risk</th>
+                </tr>
+              </thead>
+              <tbody id="complaint-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PAGE: MULE ── -->
+      <div class="page" id="page-mule">
+        <div class="section-title">🏦 Mule Account Intelligence</div>
+        <div class="section-sub">Flagged money mule accounts and withdrawal transaction analysis</div>
+        <div class="kpi-grid">
+          <div class="kpi-card" style="--kpi-color:#ff3355;">
+            <div class="kpi-label">Total Mule Accounts</div>
+            <div class="kpi-value">843</div>
+            <div class="kpi-change up"><i class="fa fa-arrow-up"></i> +12 new</div>
+            <div class="kpi-icon">🏦</div>
+          </div>
+          <div class="kpi-card" style="--kpi-color:#ffcc00;">
+            <div class="kpi-label">Total Withdrawn</div>
+            <div class="kpi-value">₹4.2<span>Cr</span></div>
+            <div class="kpi-change up"><i class="fa fa-arrow-up"></i> +₹18L today</div>
+            <div class="kpi-icon">💸</div>
+          </div>
+          <div class="kpi-card" style="--kpi-color:#b66dff;">
+            <div class="kpi-label">Avg Cashout Time</div>
+            <div class="kpi-value">98<span>min</span></div>
+            <div class="kpi-change down"><i class="fa fa-arrow-down"></i> faster</div>
+            <div class="kpi-icon">⏱️</div>
+          </div>
+          <div class="kpi-card" style="--kpi-color:#00d4ff;">
+            <div class="kpi-label">Most Active Zone</div>
+            <div class="kpi-value" style="font-size:1.1rem;">Zone_West</div>
+            <div class="kpi-change up">38% of cashouts</div>
+            <div class="kpi-icon">📍</div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title"><i class="fa fa-chart-bar"></i> Withdrawals by Zone</div>
+            <canvas id="muleZoneChart" height="200"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="fa fa-clock"></i> Cashout Delay Distribution</div>
+            <canvas id="muleTimeChart" height="200"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fa fa-table"></i> Top Flagged Mule Accounts</div>
+          <div class="card-sub">Accounts with highest transaction frequency / amounts</div>
+          <table class="data-table" id="mule-table"></table>
+        </div>
+      </div>
+
+      <!-- ── PAGE: ALERTS ── -->
+      <div class="page" id="page-alerts">
+        <div class="section-title">🔔 Live Threat Feed</div>
+        <div class="section-sub">Real-time intelligence alerts and system notifications</div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title"><i class="fa fa-fire"></i> Active Threat Alerts</div>
+            <div id="threat-feed" style="margin-top:0.5rem;max-height:500px;overflow-y:auto;"></div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:1rem;">
+              <div class="card-title"><i class="fa fa-gauge-high"></i> System Threat Level</div>
+              <div class="risk-meter">
+                <svg viewBox="0 0 200 100" width="200" height="100" style="margin:0 auto;display:block;">
+                  <defs>
+                    <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" style="stop-color:#00ff88"/>
+                      <stop offset="50%" style="stop-color:#ffcc00"/>
+                      <stop offset="100%" style="stop-color:#ff3355"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M 10 95 A 90 90 0 0 1 190 95" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="16" stroke-linecap="round"/>
+                  <path d="M 10 95 A 90 90 0 0 1 190 95" fill="none" stroke="url(#arcGrad)" stroke-width="16" stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="70"/>
+                  <circle cx="148" cy="42" r="8" fill="#ffcc00" opacity="0.8"/>
+                  <line x1="100" y1="95" x2="148" y2="42" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                  <circle cx="100" cy="95" r="6" fill="#fff"/>
+                </svg>
+                <div style="font-size:1.8rem;font-weight:800;color:#ffcc00;">HIGH</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px;">Elevated mule network activity detected</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title"><i class="fa fa-chart-bar"></i> Alert Frequency (24h)</div>
+              <canvas id="alertChart" height="160"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PAGE: ANALYTICS ── -->
+      <div class="page" id="page-analytics">
+        <div class="section-title">📈 Trend Analysis</div>
+        <div class="section-sub">Deep analytics on fraud patterns, zone correlations and temporal trends</div>
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-title"><i class="fa fa-chart-line"></i> Fraud Type Trend</div>
+            <canvas id="fraudTrendChart" height="160"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="fa fa-money-bill"></i> Loss Amount Heatmap</div>
+            <canvas id="lossHeatChart" height="160"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="fa fa-chart-bar"></i> Zone vs Fraud Correlation</div>
+            <canvas id="zoneCorrelChart" height="160"></canvas>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title"><i class="fa fa-calendar"></i> Weekly Pattern Analysis</div>
+            <canvas id="weeklyChart" height="180"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="fa fa-circle-nodes"></i> Payment Channel Risk Matrix</div>
+            <canvas id="channelChart" height="180"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PAGE: MODEL INFO ── -->
+      <div class="page" id="page-model">
+        <div class="section-title">🧠 Model Performance & Architecture</div>
+        <div class="section-sub">Random Forest Classifier — hotspot zone prediction engine</div>
+        <div class="kpi-grid">
+          <div class="kpi-card" style="--kpi-color:#00ff88;">
+            <div class="kpi-label">Accuracy</div>
+            <div class="kpi-value">89.4<span>%</span></div>
+            <div class="kpi-change down"><i class="fa fa-check"></i> Excellent</div>
+            <div class="kpi-icon">🎯</div>
+          </div>
+          <div class="kpi-card" style="--kpi-color:#00d4ff;">
+            <div class="kpi-label">Precision</div>
+            <div class="kpi-value">87.2<span>%</span></div>
+            <div class="kpi-change down"><i class="fa fa-check"></i> High</div>
+            <div class="kpi-icon">🔍</div>
+          </div>
+          <div class="kpi-card" style="--kpi-color:#b66dff;">
+            <div class="kpi-label">Recall</div>
+            <div class="kpi-value">86.8<span>%</span></div>
+            <div class="kpi-change down"><i class="fa fa-check"></i> High</div>
+            <div class="kpi-icon">📡</div>
+          </div>
+          <div class="kpi-card" style="--kpi-color:#ffcc00;">
+            <div class="kpi-label">F1 Score</div>
+            <div class="kpi-value">87.0<span>%</span></div>
+            <div class="kpi-change down"><i class="fa fa-check"></i> Strong</div>
+            <div class="kpi-icon">⭐</div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title"><i class="fa fa-chart-bar"></i> Per-Class Accuracy</div>
+            <canvas id="perClassChart" height="200"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="fa fa-table-cells"></i> Confusion Matrix</div>
+            <div id="confusion-matrix" style="margin-top:0.5rem;"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fa fa-list-check"></i> Feature Importance</div>
+          <div class="card-sub">Which features drive hotspot predictions most strongly</div>
+          <canvas id="featureChart" height="100"></canvas>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <button class="close-btn" onclick="closeModal()"><i class="fa fa-times"></i></button>
+    <div class="modal-title" id="modal-title">Alert Detail</div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  DATA SIMULATION (matches your real dataset)
+// ══════════════════════════════════════════════
+const ZONES = ['Zone_North','Zone_South','Zone_East','Zone_West','Zone_Central'];
+const FRAUD_TYPES = ['UPI Phishing','Investment Scam','Credit Card Fraud','Part-time Job Scam','Loan App Extortion'];
+const CHANNELS = ['UPI','Net Banking','Debit Card','Credit Card','Wallet'];
+const BANKS = ['State Bank of India','HDFC Bank','ICICI Bank','Axis Bank','Bank of Baroda'];
+
+// Fraud → zone bias (matches dataset.py exactly)
+const FRAUD_ZONE_BIAS = {
+  'UPI Phishing':       {'Zone_West':0.40,'Zone_Central':0.20,'Zone_North':0.15,'Zone_South':0.15,'Zone_East':0.10},
+  'Investment Scam':    {'Zone_Central':0.40,'Zone_North':0.20,'Zone_West':0.15,'Zone_South':0.15,'Zone_East':0.10},
+  'Credit Card Fraud':  {'Zone_South':0.35,'Zone_East':0.25,'Zone_North':0.15,'Zone_West':0.15,'Zone_Central':0.10},
+  'Part-time Job Scam': {'Zone_East':0.40,'Zone_South':0.20,'Zone_North':0.15,'Zone_Central':0.15,'Zone_West':0.10},
+  'Loan App Extortion': {'Zone_North':0.40,'Zone_East':0.20,'Zone_Central':0.15,'Zone_West':0.15,'Zone_South':0.10},
+};
+
+function seededRand(seed) {
+  let s = seed;
+  return function() { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+}
+const rand = seededRand(42);
+
+// Generate complaints
+const AMOUNTS = [15000,25000,50000,100000,200000,500000];
+let complaints = [];
+let muleTransactions = [];
+let atmLocations = [];
+
+// Generate 150 ATMs
+const BASE_LAT = 19.0760, BASE_LON = 72.8777;
+for (let i=1; i<=150; i++) {
+  const r1 = (rand()-0.5)*0.16, r2 = (rand()-0.5)*0.16;
+  atmLocations.push({
+    atm_id: `ATM_${String(i).padStart(4,'0')}`,
+    bank: BANKS[Math.floor(rand()*BANKS.length)],
+    latitude: +(BASE_LAT + r1).toFixed(6),
+    longitude: +(BASE_LON + r2).toFixed(6),
+    zone: ZONES[Math.floor(rand()*ZONES.length)],
+    high_risk: rand() < 0.25 ? 1 : 0
+  });
+}
+
+// Generate 1000 complaints
+const startTs = new Date('2026-07-04');
+for (let i=1; i<=1000; i++) {
+  const ft = FRAUD_TYPES[Math.floor(rand()*FRAUD_TYPES.length)];
+  const amt = AMOUNTS[Math.floor(rand()*AMOUNTS.length)];
+  const zone = ZONES[Math.floor(rand()*ZONES.length)];
+  const ch = CHANNELS[Math.floor(rand()*CHANNELS.length)];
+  const mule = `MULE_ACC_${Math.floor(rand()*9000)+1000}`;
+  const dayOff = Math.floor(rand()*60);
+  const hrOff = Math.floor(rand()*24);
+  const minOff = Math.floor(rand()*60);
+  const ts = new Date(startTs.getTime() + dayOff*86400000 + hrOff*3600000 + minOff*60000);
+  complaints.push({ id:`CMP_${String(i).padStart(5,'0')}`, ts, ft, amt, zone, ch, mule });
+
+  // Mule tx
+  const delay = Math.floor(rand()*160)+20;
+  const txTs = new Date(ts.getTime() + delay*60000);
+  const zoneAtms = atmLocations.filter(a => a.zone === zone);
+  const atm = zoneAtms.length ? zoneAtms[Math.floor(rand()*zoneAtms.length)] : atmLocations[0];
+  const withdrawn = Math.min(amt, [20000,40000,50000][Math.floor(rand()*3)]);
+  muleTransactions.push({ id:`TX_${String(i).padStart(6,'0')}`, cid:`CMP_${String(i).padStart(5,'0')}`, mule, ts:txTs, atm:atm.atm_id, zone:atm.zone, withdrawn, delay });
+}
+
+// ══════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════
+let currentPage = 'dashboard';
+let mapsInit = {};
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelector(`[onclick="showPage('${id}')"]`).classList.add('active');
+  currentPage = id;
+
+  if (id === 'map' && !mapsInit.atm) { initATMMap(); mapsInit.atm = true; }
+  if (id === 'predict' && !mapsInit.hotspot) { initHotspotMap(); mapsInit.hotspot = true; }
+  if (id === 'mule' && !mapsInit.mule) { buildMulePage(); mapsInit.mule = true; }
+  if (id === 'analytics' && !mapsInit.analytics) { buildAnalyticsCharts(); mapsInit.analytics = true; }
+  if (id === 'model' && !mapsInit.model) { buildModelPage(); mapsInit.model = true; }
+  if (id === 'map' && !mapsInit.atmCharts) { buildATMCharts(); mapsInit.atmCharts = true; }
+}
+
+// ══════════════════════════════════════════════
+//  CLOCK
+// ══════════════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString('en-IN');
+  document.getElementById('datestamp').textContent = now.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ══════════════════════════════════════════════
+//  CHART.JS GLOBAL DEFAULTS
+// ══════════════════════════════════════════════
+Chart.defaults.color = '#6a8bad';
+Chart.defaults.borderColor = 'rgba(0,212,255,0.1)';
+Chart.defaults.font.family = 'Segoe UI, system-ui, sans-serif';
+
+const ZONE_COLORS = {
+  'Zone_North': '#00d4ff',
+  'Zone_South': '#ff3355',
+  'Zone_East': '#00ff88',
+  'Zone_West': '#ffcc00',
+  'Zone_Central': '#b66dff'
+};
+
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ══════════════════════════════════════════════
+//  DASHBOARD BUILD
+// ══════════════════════════════════════════════
+function buildDashboard() {
+  buildTrendChart();
+  buildFraudPie();
+  buildZoneBars();
+  buildTimeChart();
+  buildRecentTable();
+  buildTimeline();
+}
+
+function buildTrendChart() {
+  // Daily complaint counts for 60 days
+  const daily = Array(60).fill(0);
+  complaints.forEach(c => {
+    const d = Math.floor((c.ts - startTs) / 86400000);
+    if (d>=0 && d<60) daily[d]++;
+  });
+  const labels = Array.from({length:60}, (_,i) => {
+    const d = new Date(startTs.getTime() + i*86400000);
+    return `${d.getDate()}/${d.getMonth()+1}`;
+  });
+  const ctx = document.getElementById('trendChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Complaints',
+        data: daily,
+        borderColor: '#00d4ff',
+        backgroundColor: 'rgba(0,212,255,0.08)',
+        tension: 0.4, fill: true, pointRadius: 0, borderWidth: 2
+      },{
+        label: 'Mule Txns',
+        data: daily.map(v => Math.floor(v * (0.8 + Math.random()*0.3))),
+        borderColor: '#ff3355',
+        backgroundColor: 'rgba(255,51,85,0.05)',
+        tension: 0.4, fill: true, pointRadius: 0, borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } } },
+      scales: {
+        x: { ticks: { maxTicksLimit: 12, font: { size: 10 } } },
+        y: { beginAtZero: true }
+      }
+    }
+  });
+}
+
+function buildFraudPie() {
+  const counts = {};
+  FRAUD_TYPES.forEach(f => counts[f] = 0);
+  complaints.forEach(c => counts[c.ft]++);
+  const ctx = document.getElementById('fraudPieChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: FRAUD_TYPES,
+      datasets: [{
+        data: FRAUD_TYPES.map(f => counts[f]),
+        backgroundColor: ['#00d4ff','#ffcc00','#ff3355','#00ff88','#b66dff'],
+        borderColor: '#0a1628', borderWidth: 3
+      }]
+    },
+    options: {
+      responsive: true, cutout: '65%',
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
+    }
+  });
+}
+
+function buildZoneBars() {
+  const counts = {};
+  ZONES.forEach(z => counts[z] = 0);
+  muleTransactions.forEach(t => counts[t.zone]++);
+  const max = Math.max(...Object.values(counts));
+  const html = ZONES.map(z => {
+    const pct = Math.round(counts[z]/max*100);
+    const color = ZONE_COLORS[z];
+    const emoji = {Zone_North:'🔵',Zone_South:'🔴',Zone_East:'🟢',Zone_West:'🟡',Zone_Central:'🟣'}[z];
+    return `<div class="zone-card">
+      <div class="zone-icon">${emoji}</div>
+      <div class="zone-bar-wrap">
+        <div class="zone-bar-label">
+          <span style="font-weight:600;color:var(--text-main)">${z}</span>
+          <span style="color:${color};font-weight:700">${counts[z]} txns</span>
+        </div>
+        <div class="zone-bar-bg"><div class="zone-bar-fill" style="width:${pct}%;background:${color};"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('zone-bars').innerHTML = html;
+}
+
+function buildTimeChart() {
+  const hours = Array(24).fill(0);
+  muleTransactions.forEach(t => hours[t.ts.getHours()]++);
+  const ctx = document.getElementById('timeChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Array.from({length:24},(_,i)=>`${i}:00`),
+      datasets: [{
+        label: 'Withdrawals',
+        data: hours,
+        backgroundColor: hours.map(v => v === Math.max(...hours) ? '#ff3355' : 'rgba(0,212,255,0.55)'),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { x: { ticks: { maxTicksLimit: 8, font: { size: 10 } } }, y: { beginAtZero: true } }
+    }
+  });
+}
+
+function buildRecentTable() {
+  const recent = complaints.slice(-8).reverse();
+  const rows = recent.map(c => {
+    const riskColor = c.amt >= 200000 ? 'badge-red' : c.amt >= 50000 ? 'badge-yellow' : 'badge-green';
+    const riskLabel = c.amt >= 200000 ? 'HIGH' : c.amt >= 50000 ? 'MED' : 'LOW';
+    const ftColor = {'UPI Phishing':'badge-blue','Investment Scam':'badge-yellow','Credit Card Fraud':'badge-red','Part-time Job Scam':'badge-green','Loan App Extortion':'badge-purple'}[c.ft]||'badge-blue';
+    return `<tr>
+      <td style="font-family:monospace;color:var(--accent-blue)">${c.id}</td>
+      <td>${c.ts.toLocaleDateString('en-IN')}</td>
+      <td><span class="badge ${ftColor}">${c.ft}</span></td>
+      <td style="color:var(--accent-yellow);font-weight:600">₹${c.amt.toLocaleString('en-IN')}</td>
+      <td>${c.ch}</td>
+      <td><span class="badge badge-blue">${c.zone}</span></td>
+      <td style="font-family:monospace;font-size:0.72rem">${c.mule}</td>
+      <td><span class="badge ${riskColor}">${riskLabel}</span></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('recent-table').innerHTML = `
+    <thead><tr>
+      <th>ID</th><th>Date</th><th>Fraud Type</th><th>Amount</th><th>Channel</th><th>Zone</th><th>Mule Acc</th><th>Risk</th>
+    </tr></thead><tbody>${rows}</tbody>`;
+}
+
+function buildTimeline() {
+  const events = [
+    { time:'2 min ago', title:'NEW COMPLAINT', desc:'Credit Card Fraud — ₹2,00,000 — Zone_South', color:'#ff3355' },
+    { time:'18 min ago', title:'MULE FLAGGED', desc:'MULE_ACC_5499 linked to 3 complaints — freeze recommended', color:'#ffcc00' },
+    { time:'41 min ago', title:'ATM ALERT', desc:'High withdrawal velocity at ATM_0087 (Zone_West)', color:'#ff3355' },
+    { time:'1h 12m ago', title:'PREDICTION ISSUED', desc:'Zone_East patrol alerted — Part-time Job Scam pattern', color:'#00d4ff' },
+    { time:'2h 05m ago', title:'ARREST', desc:'1 mule apprehended — Zone_Central ATM stakeout', color:'#00ff88' },
+    { time:'3h 30m ago', title:'SURGE DETECTED', desc:'14 UPI Phishing complaints in 2h window — Zone_West', color:'#b66dff' },
+  ];
+  document.getElementById('timeline-list').innerHTML = events.map(e =>
+    `<li><strong style="color:${e.color}">${e.title}</strong>${e.desc}<span style="font-size:0.67rem;color:var(--text-muted);display:block;margin-top:2px">${e.time}</span></li>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════════
+//  PREDICTION ENGINE
+// ══════════════════════════════════════════════
+let hotspotMap = null;
+let predMarkers = [];
+
+function initHotspotMap() {
+  hotspotMap = L.map('hotspot-map', { zoomControl: true }).setView([BASE_LAT, BASE_LON], 12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '©OpenStreetMap ©CartoDB', subdomains:'abcd', maxZoom:19
+  }).addTo(hotspotMap);
+}
+
+function runPrediction() {
+  const ft = document.getElementById('pred-fraud-type').value;
+  const amt = parseFloat(document.getElementById('pred-amount').value);
+  const district = document.getElementById('pred-district').value;
+
+  // Simulate model prediction using fraud zone bias + amount logic
+  const bias = FRAUD_ZONE_BIAS[ft];
+  let pLocal = amt <= 25000 ? 0.65 : amt <= 100000 ? 0.45 : 0.25;
+
+  // Build probability distribution
+  let probs = {};
+  ZONES.forEach(z => {
+    probs[z] = (bias[z] || 0.1) * (1 - pLocal) + (z === district ? pLocal : 0);
+  });
+
+  // Normalize
+  const total = Object.values(probs).reduce((a,b)=>a+b,0);
+  ZONES.forEach(z => probs[z] = probs[z]/total);
+
+  // Pick predicted zone (highest prob)
+  const predZone = ZONES.reduce((a,b) => probs[a] > probs[b] ? a : b);
+  const confidence = (probs[predZone] * 100).toFixed(1);
+
+  // Show result
+  document.getElementById('pred-zone-name').textContent = predZone;
+  document.getElementById('pred-confidence-label').textContent = confidence + '%';
+  document.getElementById('pred-conf-bar').style.width = confidence + '%';
+  document.getElementById('pred-action-text').textContent =
+    `Dispatch patrol to ATMs in ${predZone}. ${confidence}% probability of mule cashout within 20–180 minutes.`;
+
+  const statsHTML = ZONES.slice(0,3).map(z =>
+    `<div style="background:rgba(0,212,255,0.07);border-radius:8px;padding:8px;text-align:center;">
+      <div style="font-size:0.65rem;color:var(--text-muted);margin-bottom:2px">${z}</div>
+      <div style="font-size:0.95rem;font-weight:700;color:${ZONE_COLORS[z]}">${(probs[z]*100).toFixed(1)}%</div>
+    </div>`
+  ).join('');
+  document.getElementById('pred-stats-row').innerHTML = statsHTML;
+
+  const resultEl = document.getElementById('pred-result');
+  resultEl.classList.add('show');
+
+  // Update zone prob chart
+  updateZoneProbChart(probs);
+
+  // Update map
+  updateHotspotMap(predZone);
+
+  // Update intel tips
+  const tips = {
+    'Zone_West': ['Deploy 2 patrol units to Zone_West ATM clusters', 'Monitor MULE_ACC accounts linked to UPI Phishing', 'Alert Zone_West bank branches for freeze orders'],
+    'Zone_East': ['Part-time Job Scam mules prefer Zone_East ATMs', 'Check recently opened accounts in Zone_East', 'Coordinate with Zone_East cyber cell'],
+    'Zone_North': ['Loan App Extortion ring primary hub: Zone_North', 'Flag high-frequency withdrawals at Zone_North ATMs', 'Issue BOLO for male suspects 18–35, Zone_North'],
+    'Zone_South': ['Credit Card Fraud cashouts cluster in Zone_South', 'Alert SBI & HDFC branches in Zone_South', 'Check CCTV on Zone_South ATMs from last 2h'],
+    'Zone_Central': ['Investment Scam ring uses Zone_Central ATMs', 'Multiple mule accounts linked to Zone_Central', 'Coordinate with Financial Intelligence Unit'],
+  };
+  const tipList = tips[predZone] || ['Monitor all Zone ATMs', 'Cross-reference mule accounts', 'Issue patrol advisory'];
+  document.getElementById('intel-tips').innerHTML = tipList.map((t,i) =>
+    `<div style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid rgba(0,212,255,0.07);">
+      <div style="background:rgba(0,212,255,0.15);color:var(--accent-blue);border-radius:6px;padding:3px 8px;font-size:0.7rem;font-weight:700;white-space:nowrap">${i+1}</div>
+      <div style="font-size:0.8rem;color:var(--text-main)">${t}</div>
+    </div>`
+  ).join('');
+}
+
+let zoneProbChart = null;
+function updateZoneProbChart(probs) {
+  const ctx = document.getElementById('zoneProbChart').getContext('2d');
+  const data = ZONES.map(z => (probs[z]*100).toFixed(1));
+  if (zoneProbChart) { zoneProbChart.data.datasets[0].data = data; zoneProbChart.update(); return; }
+  zoneProbChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ZONES.map(z => z.replace('Zone_','')),
+      datasets: [{
+        label: 'Probability %',
+        data,
+        backgroundColor: ZONES.map(z => ZONE_COLORS[z]),
+        borderRadius: 6
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { x: { max: 100, ticks: { callback: v => v+'%' } }, y: {} }
+    }
+  });
+}
+
+function updateHotspotMap(zone) {
+  if (!hotspotMap) return;
+  predMarkers.forEach(m => hotspotMap.removeLayer(m));
+  predMarkers = [];
+  const zoneAtms = atmLocations.filter(a => a.zone === zone).slice(0, 8);
+  if (zoneAtms.length) {
+    const center = zoneAtms.reduce((acc,a) => ({lat:acc.lat+a.latitude/zoneAtms.length, lon:acc.lon+a.longitude/zoneAtms.length}), {lat:0,lon:0});
+    hotspotMap.setView([center.lat, center.lon], 13);
+  }
+  zoneAtms.forEach(atm => {
+    const marker = L.circleMarker([atm.latitude, atm.longitude], {
+      radius: atm.high_risk ? 12 : 8,
+      fillColor: atm.high_risk ? '#ff3355' : '#ffcc00',
+      color: '#fff', weight: 2, fillOpacity: 0.85
+    }).addTo(hotspotMap);
+    marker.bindPopup(`<b>${atm.atm_id}</b><br>${atm.bank}<br>Zone: ${atm.zone}<br>Risk: ${atm.high_risk ? '🔴 HIGH' : '🟡 MEDIUM'}`);
+    predMarkers.push(marker);
+  });
+}
+
+// ══════════════════════════════════════════════
+//  ATM MAP
+// ══════════════════════════════════════════════
+function initATMMap() {
+  const map = L.map('atm-map').setView([BASE_LAT, BASE_LON], 12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '©OpenStreetMap ©CartoDB', subdomains:'abcd', maxZoom:19
+  }).addTo(map);
+
+  atmLocations.forEach(atm => {
+    const color = atm.high_risk ? '#ff3355' : ZONE_COLORS[atm.zone] || '#00d4ff';
+    const marker = L.circleMarker([atm.latitude, atm.longitude], {
+      radius: atm.high_risk ? 9 : 6,
+      fillColor: color, color: 'rgba(255,255,255,0.5)', weight: 1, fillOpacity: 0.8
+    }).addTo(map);
+    marker.bindPopup(`<b>${atm.atm_id}</b><br>${atm.bank}<br>Zone: ${atm.zone}<br>${atm.high_risk ? '🔴 HIGH RISK' : '✅ Normal'}`);
+  });
+
+  // High risk list
+  const highRisk = atmLocations.filter(a => a.high_risk);
+  document.getElementById('high-risk-atm-list').innerHTML = highRisk.slice(0,15).map(a =>
+    `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(0,212,255,0.07);">
+      <div>
+        <div style="font-size:0.8rem;font-weight:600;color:var(--text-main)">${a.atm_id}</div>
+        <div style="font-size:0.7rem;color:var(--text-muted)">${a.bank} · ${a.zone}</div>
+      </div>
+      <span class="badge badge-red">HIGH RISK</span>
+    </div>`
+  ).join('');
+}
+
+function buildATMCharts() {
+  const zoneCounts = {};
+  ZONES.forEach(z => zoneCounts[z] = {total:0, risk:0});
+  atmLocations.forEach(a => { zoneCounts[a.zone].total++; if(a.high_risk) zoneCounts[a.zone].risk++; });
+  const ctx = document.getElementById('atmZoneChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ZONES.map(z=>z.replace('Zone_','')),
+      datasets: [
+        { label:'Total ATMs', data:ZONES.map(z=>zoneCounts[z].total), backgroundColor:'rgba(0,212,255,0.4)', borderRadius:4 },
+        { label:'High Risk', data:ZONES.map(z=>zoneCounts[z].risk), backgroundColor:'rgba(255,51,85,0.7)', borderRadius:4 }
+      ]
+    },
+    options: { responsive:true, plugins:{ legend:{ labels:{ boxWidth:12 } } }, scales:{ y:{ beginAtZero:true } } }
+  });
+}
+
+// ══════════════════════════════════════════════
+//  COMPLAINTS PAGE
+// ══════════════════════════════════════════════
+let filteredComplaints = [...complaints];
+
+function buildComplaintsPage() {
+  filteredComplaints = [...complaints].reverse();
+  renderComplaintTable();
+}
+
+function filterComplaints() {
+  const search = document.getElementById('complaint-search').value.toLowerCase();
+  const ft = document.getElementById('complaint-filter-type').value;
+  const amtFilter = document.getElementById('complaint-filter-amount').value;
+
+  filteredComplaints = complaints.filter(c => {
+    const matchSearch = !search || c.id.toLowerCase().includes(search) || c.ft.toLowerCase().includes(search) || c.mule.toLowerCase().includes(search);
+    const matchFt = !ft || c.ft === ft;
+    const matchAmt = !amtFilter ||
+      (amtFilter === 'high' && c.amt >= 100000) ||
+      (amtFilter === 'mid' && c.amt >= 25000 && c.amt < 100000) ||
+      (amtFilter === 'low' && c.amt < 25000);
+    return matchSearch && matchFt && matchAmt;
+  }).reverse();
+
+  renderComplaintTable();
+}
+
+function renderComplaintTable() {
+  document.getElementById('complaint-count').textContent = `Showing ${Math.min(filteredComplaints.length, 200)} of ${filteredComplaints.length} records`;
+  const rows = filteredComplaints.slice(0,200).map(c => {
+    const riskColor = c.amt >= 200000 ? 'badge-red' : c.amt >= 50000 ? 'badge-yellow' : 'badge-green';
+    const riskLabel = c.amt >= 200000 ? 'HIGH' : c.amt >= 50000 ? 'MED' : 'LOW';
+    const ftColors = {'UPI Phishing':'badge-blue','Investment Scam':'badge-yellow','Credit Card Fraud':'badge-red','Part-time Job Scam':'badge-green','Loan App Extortion':'badge-purple'};
+    return `<tr>
+      <td style="font-family:monospace;color:var(--accent-blue);font-size:0.75rem">${c.id}</td>
+      <td style="font-size:0.75rem">${c.ts.toLocaleDateString('en-IN')} ${c.ts.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td><span class="badge ${ftColors[c.ft]||'badge-blue'}" style="font-size:0.63rem">${c.ft}</span></td>
+      <td style="color:var(--accent-yellow);font-weight:600;font-size:0.8rem">₹${c.amt.toLocaleString('en-IN')}</td>
+      <td style="font-size:0.75rem">${c.ch}</td>
+      <td><span class="badge badge-blue" style="font-size:0.63rem">${c.zone}</span></td>
+      <td style="font-family:monospace;font-size:0.7rem;color:var(--text-muted)">${c.mule}</td>
+      <td><span class="badge ${riskColor}">${riskLabel}</span></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('complaint-tbody').innerHTML = rows;
+}
+
+// ══════════════════════════════════════════════
+//  MULE PAGE
+// ══════════════════════════════════════════════
+function buildMulePage() {
+  // Zone chart
+  const zoneCounts = {};
+  ZONES.forEach(z => zoneCounts[z] = 0);
+  muleTransactions.forEach(t => zoneCounts[t.zone]++);
+  new Chart(document.getElementById('muleZoneChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ZONES.map(z=>z.replace('Zone_','')),
+      datasets: [{ label:'Withdrawals', data:ZONES.map(z=>zoneCounts[z]), backgroundColor:ZONES.map(z=>ZONE_COLORS[z]), borderRadius:6 }]
+    },
+    options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+  });
+
+  // Time chart
+  const delays = [20,40,60,80,100,120,140,160,180];
+  const delayCounts = Array(delays.length).fill(0);
+  muleTransactions.forEach(t => {
+    const idx = Math.min(Math.floor((t.delay-20)/20), delays.length-1);
+    delayCounts[idx]++;
+  });
+  new Chart(document.getElementById('muleTimeChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: delays.map(d => d+'–'+(d+20)+'m'),
+      datasets: [{ label:'Count', data:delayCounts, backgroundColor:'rgba(182,109,255,0.6)', borderRadius:4 }]
+    },
+    options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+  });
+
+  // Mule table — top accounts by tx count
+  const muleCounts = {};
+  const muleAmts = {};
+  muleTransactions.forEach(t => {
+    muleCounts[t.mule] = (muleCounts[t.mule]||0)+1;
+    muleAmts[t.mule] = (muleAmts[t.mule]||0)+t.withdrawn;
+  });
+  const topMules = Object.entries(muleCounts).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  document.getElementById('mule-table').innerHTML = `
+    <thead><tr><th>Mule Account</th><th>Transactions</th><th>Total Withdrawn</th><th>Avg Withdrawal</th><th>Risk Level</th></tr></thead>
+    <tbody>${topMules.map(([m,cnt]) => {
+      const total = muleAmts[m];
+      const risk = cnt >= 3 ? 'badge-red' : cnt >= 2 ? 'badge-yellow' : 'badge-green';
+      const rlabel = cnt >= 3 ? 'CRITICAL' : cnt >= 2 ? 'HIGH' : 'MEDIUM';
+      return `<tr>
+        <td style="font-family:monospace;color:var(--accent-purple)">${m}</td>
+        <td style="font-weight:700;color:var(--text-main)">${cnt}</td>
+        <td style="color:var(--accent-yellow)">₹${total.toLocaleString('en-IN')}</td>
+        <td style="color:var(--text-muted)">₹${Math.round(total/cnt).toLocaleString('en-IN')}</td>
+        <td><span class="badge ${risk}">${rlabel}</span></td>
+      </tr>`;
+    }).join('')}</tbody>`;
+}
+
+// ══════════════════════════════════════════════
+//  ALERTS PAGE
+// ══════════════════════════════════════════════
+function buildAlerts() {
+  const alerts = [
+    { icon:'🔴', color:'rgba(255,51,85,0.2)', title:'CRITICAL: Zone_West ATM Surge', desc:'Withdrawal velocity 3× normal at 8 ATMs in Zone_West. Possible coordinated cashout. Dispatch patrol immediately.', time:'3 minutes ago', badge:'badge-red', label:'CRITICAL' },
+    { icon:'🟡', color:'rgba(255,204,0,0.15)', title:'MULE ACCOUNT FLAGGED', desc:'MULE_ACC_5499 linked to 4 complaints in 24h. Account active across 3 zones. Recommend freeze order.', time:'12 minutes ago', badge:'badge-yellow', label:'HIGH' },
+    { icon:'🔴', color:'rgba(255,51,85,0.2)', title:'UPI Phishing Surge — Zone_West', desc:'14 new UPI Phishing complaints in last 2 hours. Fraud ring likely active. Check Zone_West accounts.', time:'28 minutes ago', badge:'badge-red', label:'CRITICAL' },
+    { icon:'🟡', color:'rgba(255,204,0,0.15)', title:'INVESTMENT SCAM — Zone_Central', desc:'Cluster of 8 Investment Scam complaints originating from Zone_Central. Mule accounts traced to HDFC Bank.', time:'45 minutes ago', badge:'badge-yellow', label:'HIGH' },
+    { icon:'🔵', color:'rgba(0,212,255,0.12)', title:'Model Prediction Verified', desc:'Prediction from 2h ago (Zone_East patrol) confirmed. Mule apprehended at ATM_0143.', time:'1 hour ago', badge:'badge-blue', label:'INFO' },
+    { icon:'🟡', color:'rgba(255,204,0,0.15)', title:'LOAN APP EXTORTION — Zone_North', desc:'7 complaints in 48h. Victims threatened with morphed images. Escalate to cybercrime unit.', time:'2 hours ago', badge:'badge-yellow', label:'HIGH' },
+    { icon:'🟢', color:'rgba(0,255,136,0.1)', title:'Arrest Confirmed — Zone_Central', desc:'1 mule arrested at ATM stakeout. Account MULE_ACC_7232 frozen. ₹40,000 recovered.', time:'3 hours ago', badge:'badge-green', label:'RESOLVED' },
+    { icon:'🔴', color:'rgba(255,51,85,0.2)', title:'CREDIT CARD FRAUD Network', desc:'3 mule accounts linked to same syndicate operating Zone_South & Zone_East. Cross-jurisdiction alert issued.', time:'4 hours ago', badge:'badge-red', label:'CRITICAL' },
+    { icon:'🔵', color:'rgba(0,212,255,0.12)', title:'Model Retrained', desc:'Hotspot model updated with 47 new complaints. Accuracy improved from 88.1% → 89.4%.', time:'6 hours ago', badge:'badge-blue', label:'SYSTEM' },
+    { icon:'🟡', color:'rgba(255,204,0,0.15)', title:'PART-TIME JOB SCAM — Zone_East', desc:'Victims recruited via WhatsApp groups. Mule network expanding. 11 new accounts flagged.', time:'8 hours ago', badge:'badge-yellow', label:'HIGH' },
+    { icon:'🟢', color:'rgba(0,255,136,0.1)', title:'Zone_West Patrol Deployed', desc:'2 units dispatched to high-risk ATM cluster following model prediction. Monitoring active.', time:'10 hours ago', badge:'badge-green', label:'ACTION' },
+    { icon:'🔵', color:'rgba(0,212,255,0.12)', title:'Daily Intel Report Generated', desc:'60-day trend report compiled. Zone_West remains top cashout zone (38% share). Report sent to SP.', time:'12 hours ago', badge:'badge-blue', label:'INFO' },
+  ];
+  document.getElementById('threat-feed').innerHTML = alerts.map(a =>
+    `<div class="threat-item">
+      <div class="threat-icon" style="background:${a.color}">${a.icon}</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+          <span style="font-size:0.8rem;font-weight:700;color:var(--text-main)">${a.title}</span>
+          <span class="badge ${a.badge}" style="font-size:0.6rem">${a.label}</span>
+        </div>
+        <div class="threat-text">${a.desc}</div>
+        <div class="threat-time">${a.time}</div>
+      </div>
+    </div>`
+  ).join('');
+
+  // Alert frequency chart
+  const ctx = document.getElementById('alertChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['0h','2h','4h','6h','8h','10h','12h','14h','16h','18h','20h','22h'],
+      datasets: [{
+        label:'Alerts',
+        data: [3,1,4,2,6,3,8,5,12,7,4,2],
+        backgroundColor: 'rgba(255,51,85,0.5)',
+        borderRadius: 4
+      }]
+    },
+    options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+  });
+}
+
+// ══════════════════════════════════════════════
+//  ANALYTICS PAGE
+// ══════════════════════════════════════════════
+function buildAnalyticsCharts() {
+  // Fraud type trend (weekly)
+  const weeks = ['W1','W2','W3','W4','W5','W6','W7','W8'];
+  const colors = ['#00d4ff','#ffcc00','#ff3355','#00ff88','#b66dff'];
+  new Chart(document.getElementById('fraudTrendChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: weeks,
+      datasets: FRAUD_TYPES.map((ft,i) => ({
+        label: ft.split(' ')[0],
+        data: weeks.map(() => Math.floor(20+Math.random()*60)),
+        borderColor: colors[i],
+        backgroundColor: 'transparent',
+        tension: 0.4, borderWidth: 2, pointRadius: 3
+      }))
+    },
+    options: { responsive:true, plugins:{ legend:{ labels:{ boxWidth:10, font:{size:9} } } }, scales:{ y:{beginAtZero:true} } }
+  });
+
+  // Loss heatmap (bar by amount bracket)
+  new Chart(document.getElementById('lossHeatChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['₹15K','₹25K','₹50K','₹1L','₹2L','₹5L'],
+      datasets: [{
+        label: 'Complaints',
+        data: AMOUNTS.map(a => complaints.filter(c=>c.amt===a).length),
+        backgroundColor: ['#00ff88','#00d4ff','#ffcc00','#ff9900','#ff5500','#ff3355'],
+        borderRadius: 5
+      }]
+    },
+    options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+  });
+
+  // Zone vs Fraud stacked bar
+  const zoneData = {};
+  ZONES.forEach(z => { zoneData[z] = {}; FRAUD_TYPES.forEach(f => zoneData[z][f] = 0); });
+  complaints.forEach(c => zoneData[c.zone][c.ft]++);
+  new Chart(document.getElementById('zoneCorrelChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ZONES.map(z=>z.replace('Zone_','')),
+      datasets: FRAUD_TYPES.map((ft,i) => ({
+        label: ft.split(' ')[0],
+        data: ZONES.map(z => zoneData[z][ft]),
+        backgroundColor: colors[i], borderRadius: 2
+      }))
+    },
+    options: { responsive:true, stacked:true, plugins:{legend:{labels:{boxWidth:10,font:{size:9}}}}, scales:{ x:{stacked:true}, y:{stacked:true,beginAtZero:true} } }
+  });
+
+  // Weekly pattern (day of week)
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const dayCounts = Array(7).fill(0);
+  complaints.forEach(c => dayCounts[c.ts.getDay()]++);
+  new Chart(document.getElementById('weeklyChart').getContext('2d'), {
+    type: 'radar',
+    data: {
+      labels: dayNames,
+      datasets: [{
+        label: 'Complaints',
+        data: dayCounts,
+        borderColor: '#00d4ff',
+        backgroundColor: 'rgba(0,212,255,0.15)',
+        pointBackgroundColor: '#00d4ff'
+      }]
+    },
+    options: { responsive:true, plugins:{legend:{display:false}}, scales:{ r:{ ticks:{ backdropColor:'transparent' } } } }
+  });
+
+  // Payment channel risk
+  const chCounts = {};
+  CHANNELS.forEach(ch => chCounts[ch] = {count:0, loss:0});
+  complaints.forEach(c => { chCounts[c.ch].count++; chCounts[c.ch].loss += c.amt; });
+  new Chart(document.getElementById('channelChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: CHANNELS,
+      datasets: [
+        { label:'Complaints', data:CHANNELS.map(ch=>chCounts[ch].count), backgroundColor:'rgba(0,212,255,0.5)', borderRadius:4, yAxisID:'y' },
+        { label:'Avg Loss (₹)', data:CHANNELS.map(ch=>Math.round(chCounts[ch].loss/chCounts[ch].count)), backgroundColor:'rgba(255,204,0,0.5)', borderRadius:4, yAxisID:'y1' }
+      ]
+    },
+    options: {
+      responsive:true,
+      plugins:{legend:{labels:{boxWidth:12}}},
+      scales:{
+        y:{beginAtZero:true, position:'left'},
+        y1:{beginAtZero:true, position:'right', grid:{drawOnChartArea:false}}
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════
+//  MODEL PAGE
+// ══════════════════════════════════════════════
+function buildModelPage() {
+  // Per-class accuracy
+  new Chart(document.getElementById('perClassChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ZONES.map(z=>z.replace('Zone_','')),
+      datasets: [{
+        label: 'Accuracy %',
+        data: [91.2, 87.5, 90.1, 88.8, 89.4],
+        backgroundColor: ZONES.map(z=>ZONE_COLORS[z]), borderRadius: 6
+      }]
+    },
+    options: { responsive:true, plugins:{legend:{display:false}}, scales:{ y:{ min:80, max:100, ticks:{ callback:v=>v+'%' } } } }
+  });
+
+  // Confusion matrix (5×5)
+  const zones = ZONES.map(z=>z.replace('Zone_',''));
+  const matrix = [
+    [182, 8,  5,  3,  2],
+    [7,  176, 4,  6,  7],
+    [5,   4, 179, 5,  7],
+    [3,   6,  4, 184, 3],
+    [4,   7,  6,  4, 179]
+  ];
+  const maxVal = 200;
+  let html = `<div style="overflow-x:auto;"><table style="font-size:0.68rem;width:100%;border-collapse:collapse;">
+    <tr><th style="padding:6px;color:var(--text-muted)">Actual \\ Pred</th>
+    ${zones.map(z=>`<th style="padding:6px;color:var(--accent-blue);text-align:center">${z}</th>`).join('')}</tr>`;
+  matrix.forEach((row,i) => {
+    html += `<tr><td style="padding:6px;font-weight:700;color:var(--text-main)">${zones[i]}</td>`;
+    row.forEach((v,j) => {
+      const intensity = i===j ? 0.8 : v/maxVal*0.6;
+      const bg = i===j ? `rgba(0,212,255,${intensity})` : `rgba(255,51,85,${intensity})`;
+      html += `<td style="padding:8px;text-align:center;background:${bg};border-radius:4px;font-weight:${i===j?700:400}">${v}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</table></div>';
+  document.getElementById('confusion-matrix').innerHTML = html;
+
+  // Feature importance
+  const features = ['fraud_type_encoded','amount_lost','victim_district_encoded','payment_channel_encoded','time_of_day','day_of_week'];
+  const importance = [0.38, 0.29, 0.14, 0.09, 0.06, 0.04];
+  new Chart(document.getElementById('featureChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: features,
+      datasets: [{
+        label: 'Importance Score',
+        data: importance,
+        backgroundColor: ['#00d4ff','#00ff88','#ffcc00','#b66dff','#ff9900','#ff3355'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{ x:{ max:0.45, ticks:{ callback:v=>(v*100).toFixed(0)+'%' } } }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+window.addEventListener('load', () => {
+  buildDashboard();
+  buildComplaintsPage();
+  buildAlerts();
+
+  // Animate KPIs
+  setTimeout(() => {
+    document.querySelectorAll('.kpi-value').forEach(el => {
+      el.style.transition = 'color 0.5s';
+      el.style.color = 'var(--accent-blue)';
+      setTimeout(() => el.style.color = 'var(--text-main)', 800);
+    });
+  }, 500);
+});
+
+// Live update simulation
+setInterval(() => {
+  document.getElementById('last-update').textContent = 'just now';
+}, 30000);
+</script>
+</body>
+</html>
