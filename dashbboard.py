@@ -190,5 +190,3 @@ with tab1:
         st_folium(m, width=950, height=520, key="multi_hotspot_map")
     else:
         st.info("Configure complaint details in the sidebar and click **Generate Hotspot Prediction**.")
-
-import google.generativeai as genai
