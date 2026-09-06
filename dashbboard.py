@@ -112,13 +112,20 @@ with tab1:
         st_folium(m, width=700, height=450, key="multi_hotspot_map")
     else:
         st.info("Configure complaint details in the sidebar and click **Generate Hotspot Prediction**.")
-
-# ==========================================
+        # ==========================================
 # TAB 2: HIS AI STUDIO APP
 # ==========================================
 with tab2:
     st.markdown("🤖 **AI Cybercrime Assistant**")
-    st.write("Interact with our generative AI model directly below.")
+    st.info("To ensure maximum security and processing speed, our Generative AI Assistant runs in a dedicated Google environment.")
     
-    # Embeds his exact URL with the fullscreen parameter for a clean UI
-    components.iframe("https://ai.studio/apps/8b92e452-9168-4581-8606-c19e28717c68?fullscreenApplet=true", height=700, scrolling=True)
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    
+    # Creates a large, primary-colored button to open his app
+    st.link_button(
+        "Launch AI Cyber Assistant ↗️", 
+        "https://ai.studio/apps/8b92e452-9168-4581-8606-c19e28717c68", 
+        type="primary", 
+        use_container_width=True
+    )
+
