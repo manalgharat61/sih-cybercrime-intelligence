@@ -12,13 +12,13 @@ st.set_page_config(page_title="Cybercrime Predictive Intelligence", layout="wide
 def load_assets():
     model = joblib.load('hotspot_model.pkl')
     fraud_encoder = joblib.load('fraud_encoder.pkl')
-    district_encoder = joblib.load('district_encoder.pkl')
-    payment_encoder = joblib.load('payment_encoder.pkl')
     atm_df = pd.read_csv('atm_locations.csv')
-    return model, fraud_encoder, district_encoder, payment_encoder, atm_df
+    # Clean headers just in case
+    atm_df.columns = atm_df.columns.str.strip()
+    return model, fraud_encoder, atm_df
 
 try:
-    model, fraud_encoder, district_encoder, payment_encoder, atm_df = load_assets()
+    model, fraud_encoder, atm_df = load_assets()
 except Exception as e:
     st.error(f"Error loading model assets: {e}")
 
@@ -33,12 +33,6 @@ amount_lost = st.sidebar.number_input("Amount Lost (INR)", min_value=1000, value
 fraud_types = list(fraud_encoder.classes_) if hasattr(fraud_encoder, 'classes_') else []
 fraud_type = st.sidebar.selectbox("Fraud Type", fraud_types)
 
-districts = list(district_encoder.classes_) if hasattr(district_encoder, 'classes_') else []
-victim_district = st.sidebar.selectbox("Victim District", districts)
-
-payment_channels = list(payment_encoder.classes_) if hasattr(payment_encoder, 'classes_') else []
-payment_channel = st.sidebar.selectbox("Payment Channel", payment_channels)
-
 if 'prediction' not in st.session_state:
     st.session_state.prediction = None
     st.session_state.loss_val = None
@@ -52,8 +46,6 @@ if st.sidebar.button("Generate Hotspot Prediction"):
             return 0
             
     encoded_fraud = safe_encode(fraud_encoder, fraud_type)
-    encoded_district = safe_encode(district_encoder, victim_district)
-    encoded_payment = safe_encode(payment_encoder, payment_channel)
     
     # Generate Time Features dynamically
     now = datetime.datetime.now()
@@ -61,20 +53,16 @@ if st.sidebar.button("Generate Hotspot Prediction"):
     day_of_week = now.weekday() # 0 = Monday
     is_weekend = 1 if day_of_week >= 5 else 0
 
-    # Build input dataframe matching your training script exactly
+    # Build input dataframe matching your 5 features EXACTLY
     input_data = pd.DataFrame([[
         amount_lost, 
         encoded_fraud, 
-        encoded_district, 
-        encoded_payment, 
         hour_of_day, 
         day_of_week, 
         is_weekend
     ]], columns=[
         'amount_lost', 
         'fraud_type_encoded', 
-        'victim_district_encoded', 
-        'payment_channel_encoded', 
         'hour_of_day', 
         'day_of_week', 
         'is_weekend'
@@ -89,10 +77,15 @@ if st.session_state.prediction:
     
     st.subheader(f"Predicted Hotspot Locations for {pred_zone}")
     
-    zone_col = next((col for col in atm_df.columns if 'zone' in col.lower() or 'region' in col.lower() or 'area' in col.lower()), None)
-    
-    if zone_col and pred_zone in atm_df[zone_col].values:
-        filtered_atms = atm_df[atm_df[zone_col] == pred_zone]
+    # Look for the exact target column identified by your training script
+    target_col = None
+    for col in ['city_zone', 'zone', 'region', 'area']:
+        if col in atm_df.columns:
+            target_col = col
+            break
+            
+    if target_col and pred_zone in atm_df[target_col].values:
+        filtered_atms = atm_df[atm_df[target_col] == pred_zone]
     else:
         filtered_atms = atm_df.head(5) 
 
