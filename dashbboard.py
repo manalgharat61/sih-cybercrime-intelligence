@@ -21,7 +21,7 @@ try:
 except Exception as e:
     st.error(f"Error loading model assets: {e}")
 
-tab1, tab2 = st.tabs(["🗺️ Predictive Hotspot Map", "🤖 AI Cyber Assistant"])
+tab1= st.tabs(["🗺️ Predictive Hotspot Map"])
 
 # ==========================================
 # TAB 1: PREDICTIVE HOTSPOT DASHBOARD
