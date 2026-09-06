@@ -7,3 +7,4 @@ fastapi
 uvicorn
 requests
 streamlit-folium
+google-generativeai
