@@ -5,7 +5,7 @@ import joblib
 import folium
 from streamlit_folium import st_folium
 import hashlib
-import google.generativeai as genai
+import streamlit.components.v1 as components
 st.set_page_config(page_title="Cybercrime Predictive Intelligence", layout="wide")
 
 @st.cache_resource
@@ -192,42 +192,15 @@ with tab1:
         st.info("Configure complaint details in the sidebar and click **Generate Hotspot Prediction**.")
 
 import google.generativeai as genai
-
 # ==========================================
-# TAB 2: AI ASSISTANT (NATIVE INTEGRATION)
+# TAB 2: FRIEND'S AI DASHBOARD WEBSITE
 # ==========================================
 with tab2:
-    st.markdown("🤖 **AI Cybercrime Assistant**")
-    st.write("Chat with our trained cyber-intelligence AI directly below.")
+    st.markdown("🤖 **Integrated AI Cybercrime Portal**")
     
-    # Securely configure the API key (Paste his key inside the quotes)
-    API_KEY = "PASTE_HIS_API_KEY_HERE"
-    
-    try:
-        genai.configure(api_key=API_KEY)
-        model = genai.GenerativeModel("gemini-1.5-flash") # Or whatever model he used
-        
-        # Initialize chat history
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
-            
-        # Display previous chat messages
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
-                
-        # Chat input box
-        if prompt := st.chat_input("Ask the AI about cybercrime patterns, prevention, or penal codes..."):
-            # Add user message to screen
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.markdown(prompt)
-                
-            # Get AI response and add to screen
-            with st.chat_message("assistant"):
-                response = model.generate_content(prompt)
-                st.markdown(response.text)
-                st.session_state.messages.append({"role": "assistant", "content": response.text})
-                
-    except Exception as e:
-        st.error(f"AI Assistant is currently offline. Please verify the API key. Error: {e}")
+    # This creates a window to show his website directly inside yours
+    components.iframe(
+        "https://aistudio.google.com/apps/8b92e452-9168-4581-8606-c19e28717c68?showAssistant=true&showPreview=true&fullscreenApplet=true", 
+        height=850, 
+        scrolling=True
+    )
