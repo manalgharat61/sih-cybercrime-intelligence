@@ -31,7 +31,6 @@ amount_lost = st.sidebar.number_input("Amount Lost (INR)", min_value=1000, value
 fraud_types = list(fraud_encoder.classes_) if hasattr(fraud_encoder, 'classes_') else []
 fraud_type = st.sidebar.selectbox("Fraud Type", fraud_types)
 
-# Let the user (or judges) change the time to force different predictions!
 hour_of_day = st.sidebar.slider("Hour of Incident (0-23)", min_value=0, max_value=23, value=14)
 days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 day_name = st.sidebar.selectbox("Day of Week", days)
@@ -87,8 +86,12 @@ if st.session_state.prediction:
     else:
         filtered_atms = atm_df.head(5) 
 
-    lat_col = next((c for c in atm_df.columns if 'lat' in c.lower()), 'latitude')
     lon_col = next((c for c in atm_df.columns if 'lon' in c.lower() or 'lng' in c.lower()), 'longitude')
+    lat_col = next((c for c in atm_df.columns if 'lat' in c.lower()), 'latitude')
+    
+    # Filter out fake coordinates placed in the ocean (Longitude < 72.81)
+    if lon_col in filtered_atms.columns:
+        filtered_atms = filtered_atms[filtered_atms[lon_col] > 72.81]
     
     if not filtered_atms.empty and lat_col in filtered_atms.columns and lon_col in filtered_atms.columns:
         center_lat = filtered_atms[lat_col].mean()
@@ -96,7 +99,7 @@ if st.session_state.prediction:
     else:
         center_lat, center_lon = 19.0760, 72.8777
 
-    m = folium.Map(location=[center_lat, center_lon], zoom_start=13)
+    m = folium.Map(location=[center_lat, center_lon], zoom_start=12)
     
     for _, row in filtered_atms.iterrows():
         lat = row.get(lat_col, 19.0760)
