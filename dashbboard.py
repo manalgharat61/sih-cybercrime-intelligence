@@ -192,24 +192,3 @@ with tab1:
         st.info("Configure complaint details in the sidebar and click **Generate Hotspot Prediction**.")
 
 import google.generativeai as genai
-# ==========================================
-# TAB 2: FRIEND'S AI DASHBOARD PORTAL
-# ==========================================
-with tab2:
-    st.markdown("🤖 **MHA Cybercrime Intelligence & AI Assistant Portal**")
-    st.markdown("Access the deployed operational AI agent workbench, incident reporting logs, and automated case management systems.")
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # Hero container for professional presentation
-    with st.container():
-        st.info("💡 **Operational Notice:** The AI Assistant workspace runs on a specialized high-performance cluster. Click below to launch the live interface in full view.")
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        st.link_button(
-            "🚀 Launch Full AI & Case Management Portal", 
-            "https://aistudio.google.com/apps/8b92e452-9168-4581-8606-c19e28717c68?showAssistant=true&showPreview=true&fullscreenApplet=true", 
-            type="primary", 
-            use_container_width=True
-        )
