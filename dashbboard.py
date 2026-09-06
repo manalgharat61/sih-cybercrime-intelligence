@@ -4,7 +4,6 @@ import numpy as np
 import joblib
 import folium
 from streamlit_folium import st_folium
-import datetime
 
 st.set_page_config(page_title="Cybercrime Predictive Intelligence", layout="wide")
 
@@ -13,7 +12,6 @@ def load_assets():
     model = joblib.load('hotspot_model.pkl')
     fraud_encoder = joblib.load('fraud_encoder.pkl')
     atm_df = pd.read_csv('atm_locations.csv')
-    # Clean headers just in case
     atm_df.columns = atm_df.columns.str.strip()
     return model, fraud_encoder, atm_df
 
@@ -27,11 +25,18 @@ st.markdown("Forecast Likely Cash Withdrawal Locations in Advance")
 
 st.sidebar.header("Log New Cyber Complaint")
 
-# User Inputs
+# --- INTERACTIVE USER INPUTS ---
 amount_lost = st.sidebar.number_input("Amount Lost (INR)", min_value=1000, value=25000, step=1000)
 
 fraud_types = list(fraud_encoder.classes_) if hasattr(fraud_encoder, 'classes_') else []
 fraud_type = st.sidebar.selectbox("Fraud Type", fraud_types)
+
+# Let the user (or judges) change the time to force different predictions!
+hour_of_day = st.sidebar.slider("Hour of Incident (0-23)", min_value=0, max_value=23, value=14)
+days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+day_name = st.sidebar.selectbox("Day of Week", days)
+day_of_week = days.index(day_name)
+is_weekend = 1 if day_of_week >= 5 else 0
 
 if 'prediction' not in st.session_state:
     st.session_state.prediction = None
@@ -46,14 +51,8 @@ if st.sidebar.button("Generate Hotspot Prediction"):
             return 0
             
     encoded_fraud = safe_encode(fraud_encoder, fraud_type)
-    
-    # Generate Time Features dynamically
-    now = datetime.datetime.now()
-    hour_of_day = now.hour
-    day_of_week = now.weekday() # 0 = Monday
-    is_weekend = 1 if day_of_week >= 5 else 0
 
-    # Build input dataframe matching your 5 features EXACTLY
+    # Build input dataframe matching your 5 features
     input_data = pd.DataFrame([[
         amount_lost, 
         encoded_fraud, 
@@ -77,7 +76,6 @@ if st.session_state.prediction:
     
     st.subheader(f"Predicted Hotspot Locations for {pred_zone}")
     
-    # Look for the exact target column identified by your training script
     target_col = None
     for col in ['city_zone', 'zone', 'region', 'area']:
         if col in atm_df.columns:
